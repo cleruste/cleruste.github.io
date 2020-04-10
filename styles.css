@@ -1,0 +1,7 @@
+/* Create your test CSS here */
+
+p {
+  color: red;
+  background: red url(bg-graphic.png) 10px 10px repeat-x fixed;
+}
+
