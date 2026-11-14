@@ -143,14 +143,14 @@
 
             document.addEventListener('DOMContentLoaded', function () {
                 var cache = null;
-                try { cache = JSON.parse(sessionStorage.getItem('index_cache') || 'null'); } catch (e) { cache = null; }
+                try { cache = JSON.parse(sessionStorage.getItem('index_cache_v2') || 'null'); } catch (e) { cache = null; }
                 if (cache && (Date.now() - cache.time) < 10 * 60 * 1000) {
                     render(cache.projects);
                     return;
                 }
                 fetchProjects().then(function (projects) {
                     try {
-                        sessionStorage.setItem('index_cache', JSON.stringify({ time: Date.now(), projects: projects }));
+                        sessionStorage.setItem('index_cache_v2', JSON.stringify({ time: Date.now(), projects: projects }));
                     } catch (e) { /* storage unavailable — ignore */ }
                     render(projects);
                 }).catch(function () {
