@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>cleruste — Projects</title>
+    <title>Index</title>
     <style>
         * {
             box-sizing: border-box;
@@ -11,121 +11,40 @@
             padding: 0;
         }
 
-        html, body {
-            min-height: 100%;
-        }
-
         body {
-            background: #020617 radial-gradient(circle at center, #091326 0%, #020617 100%);
-            color: #f8fafc;
+            background: #ffffff;
+            color: #111111;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            -webkit-font-smoothing: antialiased;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 40px 20px;
+            padding: 24px;
         }
 
-        .wrap {
-            width: 100%;
-            max-width: 560px;
-        }
-
-        .brand-mark {
-            width: 54px;
-            height: 54px;
-            border-radius: 16px;
-            background: linear-gradient(135deg, #0ea5e9, #6366f1);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 26px;
-            font-weight: 900;
-            margin-bottom: 14px;
-            box-shadow: 0 10px 30px rgba(14, 165, 233, 0.35);
-        }
-
-        h1 {
-            font-size: 26px;
-            font-weight: 800;
-            letter-spacing: 0.02em;
-        }
-
-        .sub {
-            margin-top: 6px;
+        #status {
             font-size: 13px;
-            color: #94a3b8;
-            line-height: 1.5;
+            color: #999999;
         }
 
-        .status {
-            margin-top: 22px;
-            font-size: 13px;
-            color: #94a3b8;
-        }
-        .status a { color: #38bdf8; }
-
-        .list {
-            margin-top: 18px;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
+        #list {
+            list-style: none;
+            margin-top: 8px;
         }
 
-        .project-item {
+        #list a {
             display: block;
-            padding: 14px 16px;
-            border-radius: 16px;
-            border: 1px solid rgba(148, 163, 184, 0.18);
-            background: rgba(15, 23, 42, 0.72);
-            backdrop-filter: blur(10px);
+            padding: 10px 0;
+            font-size: 16px;
+            color: #111111;
             text-decoration: none;
-            color: inherit;
-            transition: background 0.15s ease, border-color 0.15s ease, transform 0.14s ease;
-        }
-        .project-item:hover {
-            background: rgba(56, 189, 248, 0.12);
-            border-color: rgba(56, 189, 248, 0.55);
-            transform: translateY(-1px);
+            border-bottom: 1px solid #eeeeee;
         }
 
-        .project-name {
-            font-size: 15px;
-            font-weight: 800;
-            color: #7dd3fc;
-            word-break: break-all;
+        #list a:hover {
+            text-decoration: underline;
         }
-
-        .project-desc {
-            margin-top: 3px;
-            font-size: 12px;
-            color: #cbd5e1;
-            line-height: 1.45;
-        }
-
-        .project-meta {
-            margin-top: 6px;
-            font-size: 11px;
-            color: #64748b;
-        }
-
-        .foot {
-            margin-top: 22px;
-            font-size: 11px;
-            color: #475569;
-        }
-        .foot a { color: #64748b; }
     </style>
 </head>
 <body>
-    <main class="wrap">
-        <div class="brand-mark">C</div>
-        <h1>cleruste</h1>
-        <p class="sub">My projects, listed automatically from GitHub. Add a folder with an <code>index.html</code> here, or enable Pages on a new repo, and it appears on its own.</p>
-        <div id="status" class="status">Loading projects from GitHub...</div>
-        <div id="list" class="list"></div>
-        <div class="foot">Browse everything on <a id="gh-link" href="#" target="_blank" rel="noopener">GitHub</a></div>
-    </main>
+    <div id="status">Loading…</div>
+    <ul id="list"></ul>
 
     <script>
         (function () {
@@ -135,19 +54,14 @@
                 ? location.hostname.split('.')[0]
                 : 'cleruste';
 
-            document.getElementById('gh-link').href = 'https://github.com/' + GITHUB_USER + '?tab=repositories';
-
-            function fetchJson(url) {
-                return fetch(url).then(function (res) {
-                    if (!res.ok) throw new Error('GitHub API ' + res.status);
-                    return res.json();
-                });
-            }
-
             function fetchAllRepos() {
                 var repos = [];
                 function getPage(page) {
-                    return fetchJson('https://api.github.com/users/' + GITHUB_USER + '/repos?per_page=100&page=' + page + '&sort=pushed')
+                    return fetch('https://api.github.com/users/' + GITHUB_USER + '/repos?per_page=100&page=' + page + '&sort=pushed')
+                        .then(function (res) {
+                            if (!res.ok) throw new Error('HTTP ' + res.status);
+                            return res.json();
+                        })
                         .then(function (data) {
                             repos = repos.concat(data);
                             if (data.length === 100 && page < 3) return getPage(page + 1);
@@ -157,37 +71,13 @@
                 return getPage(1);
             }
 
-            // Folders in this user-site repo that contain an index.html are
-            // served at ./<folderName>/ on this domain.
-            function fetchLocalProjects() {
-                var siteRepo = GITHUB_USER + '.github.io';
-                return fetchJson('https://api.github.com/repos/' + GITHUB_USER + '/' + siteRepo + '/contents/')
-                    .then(function (entries) {
-                        var dirs = entries.filter(function (e) { return e.type === 'dir'; });
-                        return Promise.all(dirs.map(function (d) {
-                            return fetchJson('https://api.github.com/repos/' + GITHUB_USER + '/' + siteRepo + '/contents/' + d.name)
-                                .then(function (items) {
-                                    var hasIndex = items.some(function (it) { return it.type === 'file' && it.name === 'index.html'; });
-                                    return hasIndex ? { name: d.name, description: '', language: null, pushed_at: null, local: true } : null;
-                                })
-                                .catch(function () { return null; });
-                        }));
-                    })
-                    .then(function (results) { return results.filter(Boolean); })
-                    .catch(function () { return []; });
-            }
-
             function fetchProjects() {
-                return Promise.all([fetchAllRepos(), fetchLocalProjects()]).then(function (results) {
-                    var seen = {};
-                    var locals = results[1];
-                    locals.forEach(function (l) { seen[l.name] = true; });
-                    var remote = results[0].filter(function (r) {
-                        return r.has_pages && !r.fork && !r.archived && !/\.github\.io$/.test(r.name) && !seen[r.name];
+                return fetchAllRepos().then(function (repos) {
+                    return repos.filter(function (r) {
+                        return r.has_pages && !r.fork && !r.archived && !/\.github\.io$/.test(r.name);
                     }).sort(function (a, b) {
                         return new Date(b.pushed_at) - new Date(a.pushed_at);
                     });
-                    return locals.concat(remote);
                 });
             }
 
@@ -197,66 +87,31 @@
                 status.style.display = 'none';
                 list.innerHTML = '';
 
-                if (!projects.length) {
-                    status.style.display = '';
-                    status.textContent = 'No projects found yet.';
-                    return;
-                }
-
                 projects.forEach(function (p) {
+                    var li = document.createElement('li');
                     var a = document.createElement('a');
-                    a.className = 'project-item';
                     a.href = './' + p.name + '/';
-
-                    var name = document.createElement('div');
-                    name.className = 'project-name';
-                    name.textContent = p.name;
-                    a.appendChild(name);
-
-                    if (p.description) {
-                        var desc = document.createElement('div');
-                        desc.className = 'project-desc';
-                        desc.textContent = p.description;
-                        a.appendChild(desc);
-                    }
-
-                    var meta = document.createElement('div');
-                    meta.className = 'project-meta';
-                    var bits = [];
-                    if (p.language) bits.push(p.language);
-                    if (p.pushed_at) bits.push('updated ' + new Date(p.pushed_at).toLocaleDateString());
-                    if (p.local) bits.push('this site');
-                    meta.textContent = bits.join(' · ');
-                    a.appendChild(meta);
-
-                    list.appendChild(a);
+                    a.textContent = p.name;
+                    li.appendChild(a);
+                    list.appendChild(li);
                 });
-            }
-
-            function fail(err) {
-                var status = document.getElementById('status');
-                status.textContent = '';
-                var link = document.createElement('a');
-                link.href = 'https://github.com/' + GITHUB_USER + '?tab=repositories';
-                link.target = '_blank';
-                link.rel = 'noopener';
-                link.textContent = 'Could not load projects (' + err.message + ') — browse them on GitHub instead.';
-                status.appendChild(link);
             }
 
             document.addEventListener('DOMContentLoaded', function () {
                 var cache = null;
-                try { cache = JSON.parse(sessionStorage.getItem('projects_cache') || 'null'); } catch (e) { cache = null; }
+                try { cache = JSON.parse(sessionStorage.getItem('index_cache') || 'null'); } catch (e) { cache = null; }
                 if (cache && (Date.now() - cache.time) < 10 * 60 * 1000) {
                     render(cache.projects);
                     return;
                 }
                 fetchProjects().then(function (projects) {
                     try {
-                        sessionStorage.setItem('projects_cache', JSON.stringify({ time: Date.now(), projects: projects }));
+                        sessionStorage.setItem('index_cache', JSON.stringify({ time: Date.now(), projects: projects }));
                     } catch (e) { /* storage unavailable — ignore */ }
                     render(projects);
-                }).catch(fail);
+                }).catch(function () {
+                    document.getElementById('status').style.display = 'none';
+                });
             });
         })();
     </script>
